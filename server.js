@@ -1,11 +1,17 @@
 const express = require('express');
 const { google } = require('googleapis');
+const Anthropic = require('@anthropic-ai/sdk');
 const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Initialize Anthropic client
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY || '',
+});
 
 // Initialize Google APIs
 const auth = new google.auth.GoogleAuth({
@@ -25,6 +31,36 @@ const auth = new google.auth.GoogleAuth({
 
 const docs = google.docs({ version: 'v1', auth });
 const drive = google.drive({ version: 'v3', auth });
+
+// Endpoint to generate content plan via Claude
+app.post('/api/generate-plan', async (req, res) => {
+  try {
+    const { prompt } = req.body;
+
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
+    });
+
+    res.json({
+      success: true,
+      content: message.content[0].text
+    });
+
+  } catch (error) {
+    console.error('Error generating plan:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
 
 // Endpoint to create Google Doc with content plan
 app.post('/api/create-content-plan', async (req, res) => {
