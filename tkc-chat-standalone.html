@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TurnKey Coach - Content Planner</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const Send = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+        );
+
+        const FileText = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+        );
+
+        const Loader2 = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+        );
+
+        function TKCSocialMediaChat() {
+            const [messages, setMessages] = useState([]);
+            const [currentInput, setCurrentInput] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [userData, setUserData] = useState({});
+            const messagesEndRef = useRef(null);
+
+            const SERVER_URL = 'https://tkc-social-content-7dmxcp4pb-josh-veachs-projects.vercel.app';
+
+            const questions = [
+                {
+                    id: 'coachType',
+                    question: "Let's create your personalized 30-day social media plan! First, what type of coach are you?",
+                    type: 'multipleChoice',
+                    options: ['Strength Coach', 'S&C Coach', 'Personal Trainer', 'Nutrition Coach', 'Hybrid Coach', 'Gym Owner', 'Other']
+                },
+                {
+                    id: 'location',
+                    question: "Where are you based?",
+                    type: 'text',
+                    placeholder: 'e.g., Austin, TX'
+                },
+                {
+                    id: 'clientAvatar',
+                    question: "Who are your ideal clients? (Be specific about demographics, goals, challenges)",
+                    type: 'text',
+                    placeholder: 'e.g., busy parents over 40, professionals with limited time...'
+                },
+                {
+                    id: 'brandVoice',
+                    question: "How should your brand voice feel? (Choose 1-3)",
+                    type: 'multipleChoice',
+                    multiple: true,
+                    options: ['Educational', 'Direct', 'Encouraging', 'Humorous', 'Evidence-based', 'Faith-centered', 'Relatable', 'Tough-love', 'Veteran-friendly']
+                },
+                {
+                    id: 'ctaStyle',
+                    question: "What's your preferred CTA (Call-to-Action) style?",
+                    type: 'multipleChoice',
+                    options: ['Soft invitation', 'Direct CTA', 'Value-first with occasional CTA', 'No CTA in every post']
+                },
+                {
+                    id: 'platforms',
+                    question: "Which platform(s) do you want to optimize content for?",
+                    type: 'multipleChoice',
+                    multiple: true,
+                    options: ['Instagram', 'YouTube', 'TikTok', 'Facebook', 'LinkedIn']
+                },
+                {
+                    id: 'contentFormats',
+                    question: "What content formats do you want to post most often?",
+                    type: 'multipleChoice',
+                    multiple: true,
+                    options: ['Raw talking-head videos', 'Lightly edited reels', 'Highly edited reels', 'Graphics', 'Carousels', 'Long-form videos', 'Written posts']
+                },
+                {
+                    id: 'postingFrequency',
+                    question: "What's your preferred posting frequency?",
+                    type: 'multipleChoice',
+                    options: ['Daily', '3-5x per week', 'Weekdays only', '2-3x per week']
+                },
+                {
+                    id: 'businessGoals',
+                    question: "What are your business goals for this content?",
+                    type: 'multipleChoice',
+                    multiple: true,
+                    options: ['Build trust', 'Grow audience', 'Increase leads', 'Convert viewers to paying clients', 'Promote low-ticket offer', 'Fill 1:1 coaching roster', 'Sell online programs']
+                },
+                {
+                    id: 'contentPillars',
+                    question: "Which content pillars do you want to focus on? (Choose 3-5)",
+                    type: 'multipleChoice',
+                    multiple: true,
+                    options: ['Personal stories (struggles + wins)', 'Technique tips', 'Programming education', 'Nutrition and habit guidance', 'Common mistakes & myths', 'Motivation / consistency', 'Behind-the-scenes of coaching', 'Personal interests (faith, family, sports, hobbies)']
+                },
+                {
+                    id: 'problemsSolved',
+                    question: "What problems do you help clients solve?",
+                    type: 'text',
+                    placeholder: 'e.g., inconsistency, low protein intake, lack of structure...'
+                },
+                {
+                    id: 'uniqueDifferentiator',
+                    question: "What makes your coaching different from competitors?",
+                    type: 'text',
+                    placeholder: 'Share what sets you apart...'
+                },
+                {
+                    id: 'firstName',
+                    question: "Perfect! Before I generate your customized 30-day plan, I need a few details. What's your first name?",
+                    type: 'text',
+                    placeholder: 'First name'
+                },
+                {
+                    id: 'lastName',
+                    question: "And your last name?",
+                    type: 'text',
+                    placeholder: 'Last name'
+                },
+                {
+                    id: 'email',
+                    question: "What's your email address?",
+                    type: 'text',
+                    placeholder: 'email@example.com'
+                },
+                {
+                    id: 'phone',
+                    question: "And finally, your phone number?",
+                    type: 'text',
+                    placeholder: '(555) 123-4567'
+                }
+            ];
+
+            useEffect(() => {
+                setMessages([{ text: questions[0].question, sender: 'bot' }]);
+            }, []);
+
+            useEffect(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [messages]);
+
+            const addMessage = (text, sender) => {
+                setMessages(prev => [...prev, { text, sender }]);
+            };
+
+            const submitAnswer = (value) => {
+                const question = questions[currentQuestion];
+                addMessage(value, 'user');
+                setUserData(prev => ({ ...prev, [question.id]: value }));
+                
+                setTimeout(() => {
+                    if (currentQuestion < questions.length - 1) {
+                        setCurrentQuestion(currentQuestion + 1);
+                        addMessage(questions[currentQuestion + 1].question, 'bot');
+                    } else {
+                        generatePlan();
+                    }
+                }, 500);
+            };
+
+            const handleMultipleChoice = (option) => {
+                const question = questions[currentQuestion];
+                
+                if (question.multiple) {
+                    const currentSelections = userData[question.id] || [];
+                    const newSelections = currentSelections.includes(option)
+                        ? currentSelections.filter(item => item !== option)
+                        : [...currentSelections, option];
+                    setUserData(prev => ({ ...prev, [question.id]: newSelections }));
+                } else {
+                    submitAnswer(option);
+                }
+            };
+
+            const confirmMultipleChoices = () => {
+                const selections = userData[questions[currentQuestion].id] || [];
+                if (selections.length > 0) {
+                    submitAnswer(selections.join(', '));
+                }
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (currentInput.trim()) {
+                    submitAnswer(currentInput.trim());
+                    setCurrentInput('');
+                }
+            };
+
+            const generatePlan = async () => {
+                setIsLoading(true);
+                addMessage("🎉 Perfect! I'm now generating your customized 30-day social media content plan...", 'bot');
+
+                try {
+                    addMessage("📝 Crafting your personalized content strategy...", 'bot');
+                    
+                    const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            model: "claude-sonnet-4-20250514",
+                            max_tokens: 4000,
+                            messages: [{ role: "user", content: buildPrompt(userData) }]
+                        })
+                    });
+
+                    const claudeData = await claudeResponse.json();
+                    const planContent = claudeData.content[0].text;
+
+                    addMessage("📄 Creating your Google Doc...", 'bot');
+                    
+                    const docResponse = await fetch(`${SERVER_URL}/api/create-content-plan`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userData, generatedPlan: planContent })
+                    });
+
+                    const docData = await docResponse.json();
+
+                    if (docData.success) {
+                        setIsLoading(false);
+                        addMessage("✅ Your 30-day content plan is ready!", 'bot');
+                        addMessage(`Hi ${userData.firstName}! I've created your personalized content calendar.`, 'bot');
+                        addMessage(`🔗 Access your plan here: ${docData.documentLink}`, 'bot');
+                    } else {
+                        throw new Error(docData.error || 'Failed to create document');
+                    }
+                } catch (error) {
+                    setIsLoading(false);
+                    addMessage("❌ Error generating plan. Contact: jveach@barbell-logic.com", 'bot');
+                }
+            };
+
+            const buildPrompt = (data) => {
+                return `Generate a comprehensive 4-week (28 posts) social media content plan based on the following information:
+
+COACH PROFILE:
+- Type of coach: ${data.coachType}
+- Location: ${data.location}
+- Ideal clients: ${data.clientAvatar}
+- Brand voice: ${Array.isArray(data.brandVoice) ? data.brandVoice.join(', ') : data.brandVoice}
+- CTA style: ${data.ctaStyle}
+
+CONTENT STRATEGY:
+- Platform(s): ${Array.isArray(data.platforms) ? data.platforms.join(', ') : data.platforms}
+- Content formats: ${Array.isArray(data.contentFormats) ? data.contentFormats.join(', ') : data.contentFormats}
+- Posting frequency: ${data.postingFrequency}
+- Business goals: ${Array.isArray(data.businessGoals) ? data.businessGoals.join(', ') : data.businessGoals}
+
+FOCUS AREAS:
+- Content pillars: ${Array.isArray(data.contentPillars) ? data.contentPillars.join(', ') : data.contentPillars}
+- Problems solved: ${data.problemsSolved}
+- Unique differentiator: ${data.uniqueDifferentiator}
+
+For each of the 28 posts, provide: post number, date, hook, teaching point, content pillar, format, and CTA matching "${data.ctaStyle}".
+
+Organize by week (WEEK 1-4). Make this immediately actionable for ${data.firstName}.`;
+            };
+
+            const currentQ = questions[currentQuestion];
+            const isMultipleChoice = currentQ?.type === 'multipleChoice';
+            const currentSelections = userData[currentQ?.id] || [];
+
+            return (
+                <div className="flex flex-col h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 shadow-lg">
+                        <div className="flex items-center gap-3">
+                            <FileText className="w-8 h-8" />
+                            <div>
+                                <h1 className="text-2xl font-bold">TurnKey Coach</h1>
+                                <p className="text-blue-100 text-sm">30-Day Social Media Content Planner</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                        {messages.map((msg, idx) => (
+                            <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                                    msg.sender === 'user' ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white text-gray-800 shadow-md rounded-bl-sm'
+                                }`}>
+                                    <p className="whitespace-pre-line">{msg.text}</p>
+                                </div>
+                            </div>
+                        ))}
+                        {isLoading && (
+                            <div className="flex justify-start">
+                                <div className="bg-white rounded-2xl px-4 py-3 shadow-md flex items-center gap-2">
+                                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                                    <span className="text-gray-600">Generating...</span>
+                                </div>
+                            </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    {!isLoading && currentQuestion < questions.length && (
+                        <div className="border-t border-gray-200 bg-white p-4">
+                            {isMultipleChoice ? (
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        {currentQ.options.map((option, idx) => {
+                                            const isSelected = currentQ.multiple && currentSelections.includes(option);
+                                            return (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => handleMultipleChoice(option)}
+                                                    className={`px-4 py-3 rounded-lg border-2 transition-all text-left ${
+                                                        isSelected ? 'border-blue-600 bg-blue-50 text-blue-700 font-medium' : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50'
+                                                    }`}
+                                                >
+                                                    {currentQ.multiple && <span className="mr-2">{isSelected ? '✓' : '○'}</span>}
+                                                    {option}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    {currentQ.multiple && (
+                                        <button
+                                            onClick={confirmMultipleChoices}
+                                            disabled={currentSelections.length === 0}
+                                            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300"
+                                        >
+                                            Continue ({currentSelections.length} selected)
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <form onSubmit={handleSubmit} className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={currentInput}
+                                        onChange={(e) => setCurrentInput(e.target.value)}
+                                        placeholder={currentQ.placeholder}
+                                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                                        autoFocus
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={!currentInput.trim()}
+                                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 flex items-center gap-2"
+                                    >
+                                        <Send className="w-5 h-5" />
+                                    </button>
+                                </form>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<TKCSocialMediaChat />, document.getElementById('root'));
+    </script>
+</body>
+</html>
