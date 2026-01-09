@@ -6,7 +6,7 @@ require('dotenv').config();
 
 const app = express();
 app.use(cors({
-  origin: ['https://jveach-bloc.github.io', 'http://localhost:3000', 'http://localhost:8000'],
+  origin: '*',  // Allow ALL origins temporarily
   credentials: true
 }));
 app.use(express.json());
