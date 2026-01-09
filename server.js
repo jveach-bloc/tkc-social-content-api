@@ -4,6 +4,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const cors = require('cors');
 require('dotenv').config();
 
+
 const app = express();
 app.use(cors({
   origin: '*',  // Allow ALL origins temporarily
