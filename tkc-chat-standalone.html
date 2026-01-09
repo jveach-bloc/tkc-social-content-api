@@ -135,15 +135,9 @@
                 },
                 {
                     id: 'email',
-                    question: "What's your email address?",
+                    question: "And finally, what's your email address?",
                     type: 'text',
                     placeholder: 'email@example.com'
-                },
-                {
-                    id: 'phone',
-                    question: "And finally, your phone number?",
-                    type: 'text',
-                    placeholder: '(555) 123-4567'
                 }
             ];
 
@@ -210,18 +204,22 @@
                 try {
                     addMessage("📝 Crafting your personalized content strategy...", 'bot');
                     
-                    const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+                    // Call our server's generate-plan endpoint instead of Claude directly
+                    const generateResponse = await fetch(`${SERVER_URL}/api/generate-plan`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            model: "claude-sonnet-4-20250514",
-                            max_tokens: 4000,
-                            messages: [{ role: "user", content: buildPrompt(userData) }]
+                            prompt: buildPrompt(userData)
                         })
                     });
 
-                    const claudeData = await claudeResponse.json();
-                    const planContent = claudeData.content[0].text;
+                    const generateData = await generateResponse.json();
+                    
+                    if (!generateData.success) {
+                        throw new Error(generateData.error || 'Failed to generate plan');
+                    }
+                    
+                    const planContent = generateData.content;
 
                     addMessage("📄 Creating your Google Doc...", 'bot');
                     
