@@ -5,7 +5,10 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ['https://jveach-bloc.github.io', 'http://localhost:3000', 'http://localhost:8000'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Initialize Anthropic client
